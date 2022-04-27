@@ -11,7 +11,7 @@ use crossbeam_channel::unbounded;
 use std::thread;
 use gzp::{par::compress::{ParCompress, ParCompressBuilder},
          deflate::Gzip, ZWriter};
-use clap::{Arg, Command, ArgGroup};
+use clap::{Arg, Command};
 
 fn is_fastq(v: &str) -> Result<(), String> {
     if v.ends_with("fastq.gz") || v.ends_with("fq.gz") {
@@ -49,7 +49,7 @@ fn cli() -> Command<'static> {
                 .validator(is_fastq),
             Arg::new("out2")
                 .short('y')
-                .help("first output fastq.gz file")
+                .help("second output fastq.gz file")
                 .takes_value(true)
                 .value_name("FILE")
                 .validator(is_fastq), 
