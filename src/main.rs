@@ -28,13 +28,15 @@ fn cli() -> Command<'static> {
                 .help("first fastq.gz file")
                 .takes_value(true)
                 .value_name("FILE")
-                .validator(is_fastq),
+                .validator(is_fastq)
+                .required(true),
             Arg::new("read2")
                 .short('b')
                 .help("second fastq.gz file")
                 .takes_value(true)
                 .value_name("FILE")
-                .validator(is_fastq),
+                .validator(is_fastq)
+                .required(true),
             Arg::new("trim-len")
                 .short('l')
                 .help("number of bases to trim")
@@ -46,13 +48,15 @@ fn cli() -> Command<'static> {
                 .help("first output fastq.gz file")
                 .takes_value(true)
                 .value_name("FILE")
-                .validator(is_fastq),
+                .validator(is_fastq)
+                .required(true),
             Arg::new("out2")
                 .short('y')
                 .help("second output fastq.gz file")
                 .takes_value(true)
                 .value_name("FILE")
-                .validator(is_fastq), 
+                .validator(is_fastq)
+                .required(true), 
             ])
 
 }
