@@ -24,6 +24,7 @@ fn cli() -> Command<'static> {
     Command::new("turbotrim")
         .args(&[
             Arg::new("read1")
+                .long("read1")
                 .short('a')
                 .help("first fastq.gz file")
                 .takes_value(true)
@@ -31,6 +32,7 @@ fn cli() -> Command<'static> {
                 .validator(is_fastq)
                 .required(true),
             Arg::new("read2")
+                .long("read2")
                 .short('b')
                 .help("second fastq.gz file")
                 .takes_value(true)
@@ -38,12 +40,14 @@ fn cli() -> Command<'static> {
                 .validator(is_fastq)
                 .required(true),
             Arg::new("trim-len")
+                .long("trim-len")
                 .short('l')
                 .help("number of bases to trim")
                 .default_value("10")
                 .value_name("NUMB")
                 .validator(|v| v.parse::<usize>()),
             Arg::new("out1")
+                .long("out1")
                 .short('x')
                 .help("first output fastq.gz file")
                 .takes_value(true)
@@ -51,6 +55,7 @@ fn cli() -> Command<'static> {
                 .validator(is_fastq)
                 .required(true),
             Arg::new("out2")
+                .long("out2")
                 .short('y')
                 .help("second output fastq.gz file")
                 .takes_value(true)
