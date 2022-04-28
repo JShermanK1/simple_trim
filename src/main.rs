@@ -11,7 +11,7 @@ use rayon::prelude::*;
 use crossbeam_channel::unbounded;
 use std::thread;
 use gzp::{par::compress::{ParCompress, ParCompressBuilder},
-         deflate::Gzip, ZWriter};
+         deflate::Bgzf, ZWriter};
 use clap::{Arg, Command};
 
 fn is_fastq(v: &str) -> Result<(), String> {
@@ -122,13 +122,13 @@ fn main() -> Result<(), Box<dyn Error>> {
 
                                 let out_f1 = File::create(PathBuf::from(out1_path)).unwrap();
                                 let out_buf1 = BufWriter::with_capacity(100 * 1024 * 1024, out_f1);
-                                let mut out_gz1: ParCompress<Gzip> = ParCompressBuilder::new()
+                                let mut out_gz1: ParCompress<Bgzf> = ParCompressBuilder::new()
                                                         .num_threads(4).unwrap()
                                                         .from_writer(out_buf1);
 
                                 let out_f2 = File::create(PathBuf::from(out2_path)).unwrap();
                                 let out_buf2 = BufWriter::with_capacity(100 * 1024 * 1024, out_f2);
-                                let mut out_gz2: ParCompress<Gzip> = ParCompressBuilder::new()
+                                let mut out_gz2: ParCompress<Bgzf> = ParCompressBuilder::new()
                                                         .num_threads(4).unwrap()
                                                         .from_writer(out_buf2);
 
