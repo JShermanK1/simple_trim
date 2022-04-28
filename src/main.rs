@@ -1,8 +1,9 @@
 use std::io::prelude::*;
 use std::io::{BufWriter,
-              BufReader};
+              BufReader,
+              BufRead};
 use std::path::PathBuf;
-use flate2::bufread::GzDecoder;
+use flate2::bufread::MultiGzDecoder;
 use std::fs::File;
 use std::error::Error;
 use itertools::Itertools;
@@ -84,12 +85,14 @@ fn main() -> Result<(), Box<dyn Error>> {
                             .expect("error parsing trim-len")
                             .parse::<usize>()
                             .unwrap();
-    let trim_len = trim_len + 1;
 
-    let fq1_f = File::open(PathBuf::from(read1_path))?;
-    let fq1 = BufReader::with_capacity(100 * 1024 * 1024, GzDecoder::new(BufReader::new(fq1_f)));
-    let fq2_f = File::open(PathBuf::from(read2_path))?;
-    let fq2 = BufReader::with_capacity(100 * 1024 * 1024, GzDecoder::new(BufReader::new(fq2_f)));
+    let fq1_f = BufReader::new(File::open(PathBuf::from(read1_path))?);
+    let fq1_gz =  MultiGzDecoder::new(fq1_f);
+    let fq1 = BufReader::with_capacity(100 * 1024_usize.pow(2), fq1_gz);
+    let fq2_f = BufReader::new(File::open(PathBuf::from(read2_path))?);
+    let fq2_gz = MultiGzDecoder::new(fq2_f);
+    let fq2 = BufReader::with_capacity(100 * 1024_usize.pow(2), fq2_gz);
+
 
     let (s, r) = unbounded();
     let (s_chunk, r_chunk) = unbounded();
@@ -99,12 +102,15 @@ fn main() -> Result<(), Box<dyn Error>> {
                             .name("trimer".to_string())
                             .spawn(move || {
         r_chunk.into_iter().par_bridge().for_each(|(mut read1, mut read2): (Vec<String>, Vec<String>)| {
-            read1[1].drain(..trim_len);
-            read1[3].drain(..trim_len);
+            let drain1 = read1[1].len().saturating_sub(trim_len);
+            let drain2 = read2[1].len().saturating_sub(trim_len);
+            
+            read1[1].truncate(drain1);
+            read1[3].truncate(drain1);
             let read1 = read1.join("\n") + "\n";
 
-            read2[1].drain(..trim_len);
-            read2[3].drain(..trim_len);
+            read2[1].truncate(drain2);
+            read2[3].truncate(drain2);
             let read2 = read2.join("\n") + "\n";
 
             s.send((read1, read2)).unwrap();
@@ -140,17 +146,14 @@ fn main() -> Result<(), Box<dyn Error>> {
                                 
                             }).unwrap();
 
-    let reads2 = fq2.lines()
-                    .map(|l| l.unwrap())
-                    .chunks(4);
-
     fq1.lines()
-        .map(|l| l.unwrap())
+        .zip(fq2.lines())
+        .map(|(l1, l2)| (l1.unwrap(), l2.unwrap()))
         .chunks(4)
         .into_iter()
-        .zip(&reads2)
-        .for_each(|(read1, read2)| {
-            s_chunk.send((read1.collect::<Vec<String>>(), read2.collect::<Vec<String>>())).unwrap();
+        .for_each(|chunk| {
+            let (read1, read2): (Vec<String>, Vec<String>) = chunk.multiunzip();
+            s_chunk.send((read1, read2)).unwrap();
         });
 
     drop(s_chunk);
