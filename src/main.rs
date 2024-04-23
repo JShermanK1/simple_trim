@@ -22,7 +22,7 @@ fn is_fastq(v: &str) -> Result<(), String> {
  }
 
 fn cli() -> Command<'static> {
-    Command::new("turbotrim")
+    Command::new("simpletrim")
         .args(&[
             Arg::new("read1")
                 .long("read1")
